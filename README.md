@@ -159,4 +159,3 @@ docker run --rm -ti \
 ```bash
 iostat -xt 10
 ```
-
