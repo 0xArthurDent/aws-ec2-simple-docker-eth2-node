@@ -139,6 +139,12 @@ Start containers
 docker compose up
 ```
 
+Check that node has synced. example command to execute command within docker container
+
+```bash
+docker exec geth-sepolia geth --exec 'eth.blockNumber' attach ipc:/root/.ethereum/sepolia/geth.ipc
+```
+
 ### Optional: > Run Ctop
 
 ```bash
@@ -154,6 +160,3 @@ docker run --rm -ti \
 iostat -xt 10
 ```
 
-
-
-docker exec geth-sepolia geth --exec 'eth.blockNumber' attach ipc:/root/.ethereum/sepolia/geth.ipc
