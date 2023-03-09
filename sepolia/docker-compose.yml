@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  execution:
+    image: ethereum/client-go:v1.11.2
+    container_name: geth-sepolia
+    # --http.addr and --authrpc.addr 0.0.0.0 to listen on all interfaces and not just localhost. Localhost wouldn't work with containers as they have differt ip's.
+    # add container name "geth-sepolia" to accepted --http.vhosts and --authrpc.vhosts
+    # geth v1.10.20 already has terminaltotaldifficulty (TTD) built-in but leaving for networks that need explicit stating.
+    # geth will open the authrpc and create a jwt if it detects merge i.e. TTD
+    command:
+      - --sepolia
+      - --syncmode=snap
+      - --http
+      - --http.api=engine,admin,eth,net,web3
+      - --http.addr=0.0.0.0
+      - --http.corsdomain=*
+      - --http.vhosts=*
+      - --authrpc.vhosts=*
+      - --authrpc.jwtsecret=/root/.ethereum/jwt.hex
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.port=8551
+    ports:
+      # Set the port you want to access the execution client RPC on your host. Here 8546
+      - 30303:30303
+      - 30303:30303/udp
+      - 8545:8545
+      - 8546:8546
+      - 8551:8551
+    volumes:
+      # You might have to mkdir ~/.ethereum
+      - /mnt/docker-datastore/geth/.ethereum:/root/.ethereum
+    stop_signal: SIGINT
+    stop_grace_period: 3m # long grace period to avoid unclean shutdown
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "docker exec geth-sepolia geth --exec 'eth.blockNumber' attach ipc:/root/.ethereum/sepolia/geth.ipc"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  consensus:
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
+    pull_policy: always
+    container_name: beacon
+    restart: unless-stopped
+    stop_grace_period: 2m
+    volumes:
+      - /mnt/docker-datastore/prysm:/data
+      - /mnt/docker-datastore/geth/.ethereum:/geth
+    depends_on:
+      execution:
+        condition: service_healthy
+    ports:
+      - 4000:4000
+      - 13000:13000
+      - 12000:12000/udp
+    command:
+      - --sepolia
+      - --accept-terms-of-use
+      - --datadir=/data
+      - --monitoring-host=0.0.0.0
+      - --rpc-host=0.0.0.0
+      - --execution-endpoint=http://geth-sepolia:8551
+      - --jwt-secret=/geth/jwt.hex
+      - --rpc-host=0.0.0.0
+      - --rpc-port=4000
+      - --grpc-gateway-corsdomain=*
+      - --grpc-gateway-host=0.0.0.0
+      - --suggested-fee-recipient=0xF8Db3483FaFB1e0016075F9a0D019E3401e0A913
+      - --genesis-state=/data/genesis.ssz
