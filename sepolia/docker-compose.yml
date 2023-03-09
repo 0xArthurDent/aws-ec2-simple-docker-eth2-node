@@ -4,10 +4,6 @@ services:
   execution:
     image: ethereum/client-go:v1.11.2
     container_name: geth-sepolia
-    # --http.addr and --authrpc.addr 0.0.0.0 to listen on all interfaces and not just localhost. Localhost wouldn't work with containers as they have differt ip's.
-    # add container name "geth-sepolia" to accepted --http.vhosts and --authrpc.vhosts
-    # geth v1.10.20 already has terminaltotaldifficulty (TTD) built-in but leaving for networks that need explicit stating.
-    # geth will open the authrpc and create a jwt if it detects merge i.e. TTD
     command:
       - --sepolia
       - --syncmode=snap
