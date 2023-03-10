@@ -1,6 +1,6 @@
 # aws-ec2-simple-docker-eth2-node
 
-An example of a simple eth2 node running on docker using Geth as execution client and Prysm as a Consensus client.
+An example of a simple eth2 beacon node running on docker using Geth as execution client and Prysm as a Consensus client.
 
 ## Prerequisites
 
